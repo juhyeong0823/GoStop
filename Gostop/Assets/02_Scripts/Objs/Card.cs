@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -23,10 +24,7 @@ public class Card : MonoBehaviour, IPointerDownHandler
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        Card putCard = null;
-        CardGrid putGrid = gm.PutCard(this, out putCard);
-        gm.FollowCard(putCard);
+        gm.PutCard(this);
 
-        gm.TakePair_PutCard(putGrid);
     }
 }

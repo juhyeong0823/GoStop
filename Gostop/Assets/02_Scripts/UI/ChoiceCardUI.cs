@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class ChoiceCardUI : MonoBehaviour
 {
-    
     [SerializeField] private Image lCardImg;
     [SerializeField] private Image rCardImg;
 

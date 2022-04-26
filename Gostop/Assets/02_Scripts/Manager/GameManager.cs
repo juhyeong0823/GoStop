@@ -5,53 +5,27 @@ using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
 {
-    public List<CardDataSO> allCardsData = new List<CardDataSO>(); // 복사해서 쓸 리스트
-
     [HideInInspector] public List<Card> useCardList = new List<Card>(); // 실제 사용할 패
     [HideInInspector] public Queue<Card> followUpCardQueue = new Queue<Card>(); // 뒷패깔 때 쓸 용도
 
-    [HideInInspector] public List<Card> myUtilizeCards = new List<Card>();     // 내가 사용 가능한 패들
-    [HideInInspector] public List<Card> othersUtilizeCards = new List<Card>(); // 상대가 사용 가능한 패들
-
-    [HideInInspector] public List<Card> myCards = new List<Card>();            // 내가 먹은 패들
-    [HideInInspector] public List<Card> otherCards = new List<Card>();         // 상대가 먹은 패들
+    public List<Card> myCards = new List<Card>();            // 내가 먹은 패들
+    public List<Card> otherCards = new List<Card>();         // 상대가 먹은 패들
 
     public List<CardGrid> cardGrids = new List<CardGrid>(); // 카드를 깔 위치, 기존과 다르게 그냥 빈 곳을 찾아서 찾아간다
-    
+    List<int> takenMonthList = new List<int>();  // 먹힌 놈들 월 저장
 
     public Queue<Action> choiceCallBackQueue = new Queue<Action>(); // 두개의 패를 치고, 나중에 고르도록
-
     public Queue<Card> putCardQueue = new Queue<Card>(); // 골랐을 때 애도 먹어버리면 됨
-
-    public Card cardPrefab;
-
-    #region
-    public Transform cvsTrm;
-
-    [Header("내 피들 놓을 위치")]
-    [SerializeField] private Transform myUtilizeCardsTrm;
-    [SerializeField] private Transform myGwangTrm;
-    [SerializeField] private Transform myAnimalsTrm;
-    [SerializeField] private Transform myBandTrm;    
-    [SerializeField] private Transform myPeeTrm;
-
-    [Space(15)]
-
-    [Header("상대 피들 놓을 위치")]
-    [SerializeField] private Transform othersUtilizeCardsTrm;
-    [SerializeField] private Transform othersPeeTrm;    
-    [SerializeField] private Transform othersBandTrm;    
-    [SerializeField] private Transform othersGwangTrm;    
-    [SerializeField] private Transform othersAnimalsTrm;
-
-    [Header("고를 카들 보여줄 위치")]
-    public Transform card1Trm;
-    public Transform card2Trm;
-
-    #endregion
 
     public bool isChoicing = false;
     public bool isUserTurn = true;
+    bool isFirstChecking = true;
+
+    public ScoreCounter sc = new ScoreCounter();
+
+    public ScoreData user = new ScoreData();
+    public ScoreData other = new ScoreData();
+
     private void Start()
     {
         GameStart();
@@ -64,9 +38,18 @@ public class GameManager : Singleton<GameManager>
 
     void GameStart()
     {
-        SetUseCardList();
-        GiveAndPlaceCards();
+        CardManager.Instance.SetUseCardList();
+        CardManager.Instance.SetPlayersUtilizeCard();
+        CardManager.Instance.SetUtilizeCards();
         SetFollowCardQueue();
+    }
+
+    public void TryExecuteChoiceCallback()
+    {
+        if (choiceCallBackQueue.Count > 0)
+        {
+            choiceCallBackQueue.Dequeue()?.Invoke();
+        }
     }
 
     public Card GetRandomCard()
@@ -77,30 +60,24 @@ public class GameManager : Singleton<GameManager>
         return retCard;
     }
 
-
-    /*
-    List<int> takenMonthList = new List<int>();  // 먹힌 놈들 월 저장
-    public bool IsTakenMonthCard(Card card) // 죽은 패인지
-    {
-        foreach (int month in takenMonthList)
-        {
-            if (month == card.cardData.cardMonth) return true;
-        }
-        return false;
-    }
-    */
-
     public void ChoiceCard(Card card1, Card card2, CardGrid grid)
     {
-        if (grid.placedCards.Count == 0)  // 뻑이거나 3개 중 선택인줄 알았는데 따닥으로 먹은거죠. 
+        if (grid.placedCards.Count == 0)  // 2개 중 선택인줄 알았는데 따닥으로 먹은거죠. 
         {
             putCardQueue.Dequeue(); // 한번 실패하면 하나 빼줘야 해
             TryExecuteChoiceCallback(); // 다음거 있나 확인해주고.
         }
         else
         {
-            isChoicing = true; // 뭔가 행동 제어가 필요할 듯. 선택중일 때는 아무것도 못하게 -> 패널로 막아두긴 했으나 더 좋은 방법 있나?
-            UIManager.Instance.choiceUI.SetData(card1, card2, grid);
+            if(isUserTurn)
+            {
+                isChoicing = true; // 뭔가 행동 제어가 필요할 듯. 선택중일 때는 아무것도 못하게 -> 패널로 막아두긴 했으나 더 좋은 방법 있나?
+                UIManager.Instance.choiceUI.SetData(card1, card2, grid);
+            }
+            else
+            {
+                OnChooseCard(card1, grid);
+            }
         }
     }
 
@@ -113,120 +90,22 @@ public class GameManager : Singleton<GameManager>
         TryExecuteChoiceCallback();
     }
 
-    public CardGrid GetNullGrid() // 빈 곳 받아오기
-    {
-        return cardGrids.Find((x) => x.placedCards.Count == 0); // 설치된 친구가 있는지 없는지.
-    }
+    public CardGrid GetNullGrid() => cardGrids.Find((x) => x.placedCards.Count == 0);
 
     public void OnScored(Card card, CardGrid cardGrid = null) // 카드를 얻을 때
     {
-        card.transform.parent = GetDestination(card);
-        myCards.Add(card);
+        CardManager.Instance.TransportCard(card);
         if (cardGrid != null) cardGrid.placedCards.Remove(card);
-    }
 
-    public void TryExecuteChoiceCallback()
-    {
-        if (choiceCallBackQueue.Count > 0)
+        if(isUserTurn)
         {
-            choiceCallBackQueue.Dequeue()?.Invoke();
+            myCards.Add(card);
         }
         else
         {
-
+            otherCards.Add(card);
         }
-    }
 
-    public void TryExecuteOtherTurn()
-    {
-
-    }
-
-    public void SetGrid(CardGrid nullGrid, Card placeCard)
-    {
-        nullGrid.curPlacedCardMonth = placeCard.cardData.cardMonth; // 이제 이 그리드는 이 카드의 월에 해당하는 것만 받아올 수 있음!
-        nullGrid.placedCards.Add(placeCard);
-        placeCard.transform.parent = nullGrid.transform;
-    }
-
-    Transform GetDestination(Card card)
-    {
-        Transform destination = null;
-        eProperty e = card.cardData.cardProperty;
-
-        if (isUserTurn)
-        {
-            if ((e & eProperty.ANIMAL) != 0) destination = myAnimalsTrm;
-            else if ((e & eProperty.Gwang) != 0) destination = myGwangTrm;
-            else if ((e & eProperty.BLUE_BAND) != 0 || (e & eProperty.RED_BAND) != 0 || (e & eProperty.LEAF_BAND) != 0) destination = myBandTrm;
-            else if ((e & eProperty.NONE) == 0) destination = myPeeTrm;
-        }
-        else
-        {
-            if ((e & eProperty.ANIMAL) != 0) destination = othersAnimalsTrm;
-            else if ((e & eProperty.Gwang) != 0) destination = othersGwangTrm;
-            else if ((e & eProperty.BLUE_BAND) != 0 || (e & eProperty.RED_BAND) != 0 || (e & eProperty.LEAF_BAND) != 0) destination = othersBandTrm;
-            else if ((e & eProperty.NONE) == 0) destination = othersPeeTrm;
-        }
-        
-
-        return destination;
-    }
-
-    public void ResetGrid(CardGrid grid)
-    {
-        grid.curPlacedCardMonth = -1;
-    }
-
-
-    void SetUseCardList()   
-    {
-        foreach (var item in allCardsData)
-        {
-            Card card = Instantiate(cardPrefab, cvsTrm);
-            card.Init(item);
-            useCardList.Add(card);
-            card.gameObject.SetActive(false);
-        }
-    }
-    
-
-    void GiveCard(Transform parent, List<Card> targetList)
-    {
-        Card card = GetRandomCard();
-        targetList.Add(card);
-        card.transform.parent = parent;
-        card.gameObject.SetActive(true);
-    }
-    void PlaceCard() // 알아서 4번 돌림
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            Card card = GetRandomCard(); // 랜덤으로 하나 뽑고
-            CardGrid grid = CardFinder.GetSameMonthCardsGrid(cardGrids, card);
-            if (grid == null)
-            {
-                grid = GetNullGrid();
-            }
-
-            SetGrid(grid, card);
-            card.gameObject.SetActive(true);
-        }
-    }
-    void GiveAndPlaceCards()
-    {
-        for (int i = 0; i < 4; i++) GiveCard(myUtilizeCardsTrm, myUtilizeCards);
-        for (int i = 0; i < 4; i++) GiveCard(othersUtilizeCardsTrm, othersUtilizeCards);
-
-        PlaceCard();
-
-        for (int i = 0; i < 4; i++) GiveCard(myUtilizeCardsTrm, myUtilizeCards);
-        for (int i = 0; i < 4; i++) GiveCard(othersUtilizeCardsTrm, othersUtilizeCards);
-
-        PlaceCard();
-
-        for (int i = 0; i < 2; i++) GiveCard(myUtilizeCardsTrm, myUtilizeCards);
-        for (int i = 0; i < 2; i++) GiveCard(othersUtilizeCardsTrm, othersUtilizeCards);
     }
 
     void SetFollowCardQueue()
@@ -235,19 +114,91 @@ public class GameManager : Singleton<GameManager>
         useCardList.Clear(); // 애는 이제 쓸 일 없음.
     }
 
-    public CardGrid PutCard(Card card, out Card putCard) // 내가 낸 그리드를 가지고 있으면 좋을듯?
+    void CheckMyCards() // 내가 가진 패 중, 같은 월 카드가 몇개인지 -> 폭탄 흔들기 체크용임
     {
-        putCard = card;
+        foreach(var card in myCards)
+        {
+            int sameWithItemMonth = CardManager.Instance.GetSameMonthCards(card).Count;
+            if (sameWithItemMonth > 3)
+            {
+                //첫 턴인지 아닌지 체크해서 처음이면 총통
+                if(isFirstChecking)
+                {
+                    // 총통, 승리 처리 후 게임 데이터 등에 static으로 박아놔서 Double! 박아두기
+                    isFirstChecking = false;
+                }
+                else
+                {
+                    // 여기는 흔들기 100%
+                }
+            }
+            else if(sameWithItemMonth > 2)
+            {
+                // 폭탄 or 흔들기인데 이제 
+                if(CardFinder.GetSameMonthCardsGrid(cardGrids,card) != null)
+                {
+                    // 여기는 폭탄
+                }
+                else
+                {
+                    // 여기는 흔들기
+                }
+            }
+            else if(IsTakenMonthCard(card))
+            {
+                // 카드 위 커서, 살아 있는 패 커서로
+            }
+            else if(CardFinder.GetSameMonthCardsGrid(cardGrids, card) != null)
+            {
+                // 죽은 패
+            }
+            else
+            {
+                // 당장은 못 쓰는 패
+            }
+        }
+    }
 
-        // 같은 월이 깔려있는 그리드를 찾습니다.
+    void MoveCardToGrid(Card card, CardGrid grid)
+    {
+        card.transform.parent = grid.transform;
+        grid.placedCards.Add(card);
+    }
+
+    public bool IsTakenMonthCard(Card card) // 죽은 패인지
+    {
+        foreach (int month in takenMonthList)
+        {
+            if (month == card.cardData.cardMonth) return true;
+        }
+        return false;
+    }
+
+    public void OnShakeOrBomb()
+    {
+        if(isUserTurn)
+        {
+            user.shakedCount++;
+        }
+        else
+        {
+            other.shakedCount++;
+        }
+    }    
+
+    public void PutCard(Card card) // 내가 낸 그리드를 가지고 있으면 좋을듯?
+    {
         CardGrid targetGrid = CardFinder.GetSameMonthCardsGrid(cardGrids, card);
-
-        //패를 낸 사람(?)이 사용가능한 패 리스트에서 제거
-        myUtilizeCards.Remove(card);
 
         if (targetGrid == null) // 같은 월이 깔린게 없으면 그냥 비어있는데에 내려놓습니다.
         {
-            targetGrid = PlaceCardAtNullGrid(card);
+            if (CardManager.Instance.GetSameMonthCards(card).Count >= 3)
+            {
+                Debug.Log("흔들기"); // 처리 해주기 , UI 만들기
+                OnShakeOrBomb();
+            }
+            targetGrid = GetNullGrid();
+            targetGrid.Set(card);
         }
         else
         {
@@ -255,17 +206,29 @@ public class GameManager : Singleton<GameManager>
             switch (count)
             {
                 case 1: // 하나 있으면 그 친구한테 우선 가기. -> 뻑 가능성
-                    card.transform.parent = targetGrid.transform;
-                    targetGrid.placedCards.Add(card);
+                    List<Card> cards = CardManager.Instance.GetSameMonthCards(card);
+                    if (cards.Count == 3)
+                    {
+                        OnScored(targetGrid.placedCards[0], targetGrid); // 바닥 패 먹고
+                        while (cards.Count > 0)
+                        {
+                            OnScored(cards[0]);
+                            cards.RemoveAt(0);
+                        }
+                        OnShakeOrBomb();
+                    }
+                    else
+                    {
+                        MoveCardToGrid(card, targetGrid);
+                    }
+                    
                     break;
                 case 2: // 두개 있으면 거기로 우선 가기 -> 따닥 가능성
-                    choiceCallBackQueue.Enqueue(() =>
-                       ChoiceCard(targetGrid.placedCards[0], targetGrid.placedCards[1], targetGrid));
+                    MoveCardToGrid(card, targetGrid);
+
+                    choiceCallBackQueue.Enqueue(() => 
+                        ChoiceCard(targetGrid.placedCards[0], targetGrid.placedCards[1], targetGrid));
                     putCardQueue.Enqueue(card);
-
-                    card.transform.parent = targetGrid.transform;
-                    targetGrid.placedCards.Add(card);
-
                     break;
 
                 case 3: // 3개 있으면 다 가져오고 
@@ -274,19 +237,13 @@ public class GameManager : Singleton<GameManager>
                         OnScored(targetGrid.placedCards[0], targetGrid);
                     }
 
-                    // 내가 낸 것도 가져오기.
-                    OnScored(card, targetGrid);
-
-                    ResetGrid(targetGrid);
+                    OnScored(card);
+                    OnShakeOrBomb();
+                    targetGrid.Reset();
                     break;
             }
         }
 
-        return targetGrid;
-    }
-
-    public void FollowCard(Card putCard)
-    {
         Card followCard = followUpCardQueue.Dequeue();
 
         followCard.gameObject.SetActive(true);
@@ -295,7 +252,8 @@ public class GameManager : Singleton<GameManager>
 
         if (followCardTargetGrid == null) // 같은 월이 깔린게 없으면 그냥 비어있는데에 내려놓습니다.
         {
-            followCardTargetGrid = PlaceCardAtNullGrid(followCard);
+            followCardTargetGrid = GetNullGrid();
+            followCardTargetGrid.Set(followCard);
         }
         else
         {
@@ -303,7 +261,7 @@ public class GameManager : Singleton<GameManager>
             switch (count)
             {
                 case 1: // 뒷패를 깠는데 하나만 있다는 거면, 무조건 가져오면 됨.
-                    if (putCard == followCard)
+                    if (card.cardData.cardMonth == followCard.cardData.cardMonth)
                     {
                         Debug.Log("쪽");
                         // 한장 뺏기
@@ -311,29 +269,29 @@ public class GameManager : Singleton<GameManager>
 
                     OnScored(followCard);
                     OnScored(followCardTargetGrid.placedCards[0], followCardTargetGrid);
-                    ResetGrid(followCardTargetGrid);
+                    followCardTargetGrid.Reset();
                     break;
 
-                case 2: // '' 두 개가 있다는 거면 둘 중 하나를 선택하게 하면 됨.
-                    transform.parent = followCardTargetGrid.transform;
-                    followCardTargetGrid.placedCards.Add(followCard);
+                case 2: // 두 개가 있다는 거면 둘 중 하나를 선택하게 하면 됨.
+                    MoveCardToGrid(followCard, followCardTargetGrid);
 
-                    if (putCard == followCard) //뻑임
+                    if (card.cardData.cardMonth == followCard.cardData.cardMonth) //뻑임
                     {
                         Debug.Log("뻑");
                     }
                     else
                     {
-                        choiceCallBackQueue.Enqueue(() =>
+                        choiceCallBackQueue.Enqueue(() => 
                             ChoiceCard(followCardTargetGrid.placedCards[0], followCardTargetGrid.placedCards[1], followCardTargetGrid));
                         putCardQueue.Enqueue(followCard);
                     }
                     break;
 
                 case 3: // 3개 있으면 다 가져오고 
-                    if (putCard == followCard)
+                    if (card.cardData.cardMonth == followCard.cardData.cardMonth)
                     {
                         Debug.Log("따닥");
+
                         //한장 뺏기
                     }
 
@@ -344,37 +302,31 @@ public class GameManager : Singleton<GameManager>
                     }
 
                     OnScored(followCard); // 내가 낸 것도 가져오기.
-                    ResetGrid(followCardTargetGrid);
+                    choiceCallBackQueue.Clear();
+                    followCardTargetGrid.Reset();
                     break;
             }
         }
 
-        TryExecuteChoiceCallback();
-
-    }//followCard 끝
-
-    public void TakePair_PutCard(CardGrid putGrid) // 내가 낸 패인데, 두개만 있는거면 가져오기
-    {
-        if (putGrid.placedCards.Count == 2)
+        if(targetGrid != null)
         {
-            while (putGrid.placedCards.Count != 0)
-            {
-                OnScored(putGrid.placedCards[0], putGrid);
-            }
-
-            ResetGrid(putGrid);
+            CardManager.Instance.TakePairCard(targetGrid);
         }
         else
         {
-            Debug.Log("카드 수 " + putGrid.placedCards.Count);
+            Debug.Log("롤백하자~");
         }
-    }
+        TryExecuteChoiceCallback();
 
-    public CardGrid PlaceCardAtNullGrid(Card placeCard)
-    {
-        CardGrid nullGrid = GetNullGrid();
-        SetGrid(nullGrid, placeCard);
-
-        return nullGrid;
+        if (isUserTurn)
+        {
+            sc.CheckCards(myCards, user);
+            Debug.Log(sc.GetScore(user));
+        }
+        else
+        {
+            sc.CheckCards(otherCards, other);
+            Debug.Log(sc.GetScore(other));
+        }
     }
 }

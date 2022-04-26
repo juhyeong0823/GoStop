@@ -12,5 +12,6 @@ public enum eProperty
     BLUE_BAND   = 1 << 6,
     DOUBLE      = 1 << 7,
     BGwang      = 1 << 8,
-    DOUBLE_NINE = 1 << 9
+    DOUBLE_NINE = 1 << 9,
+    BBand       = 1 << 10
 }

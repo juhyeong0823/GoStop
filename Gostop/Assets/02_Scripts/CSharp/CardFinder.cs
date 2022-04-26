@@ -9,5 +9,4 @@ public static class CardFinder
         return grids.Find((x) => x.curPlacedCardMonth == putCard.cardData.cardMonth);
     }
 
-
 }

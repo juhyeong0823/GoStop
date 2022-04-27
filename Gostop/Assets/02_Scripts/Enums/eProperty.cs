@@ -3,15 +3,17 @@ using System;
 [Flags]
 public enum eProperty
 {
-    NONE        = 0,
-    Gwang       = 1 << 0,
-    GODORI      = 1 << 1,
-    ANIMAL      = 1 << 2,
-    LEAF_BAND   = 1 << 4,
-    RED_BAND    = 1 << 5,
-    BLUE_BAND   = 1 << 6,
-    DOUBLE      = 1 << 7,
-    BGwang      = 1 << 8,
-    DOUBLE_NINE = 1 << 9,
-    BBand       = 1 << 10
+    None        = 0,
+    Junk        = 1,
+    Gwang       = 2,
+    Godori      = 4,
+    Animal      = 8,
+    LeafBand    = 16,
+    RedBand     = 32,
+    BlueBand    = 64,
+    Double      = 128,
+    BGwang      = 256,
+    DoubleNine  = 512,
+    BBand       = 1024,
+    Band        = 2048
 }

@@ -45,20 +45,21 @@ public class ScoreCounter
 
         foreach (Card card in cards)
         {
-            if ((card.cardData.cardProperty & eProperty.BGwang)            != 0)  { sd.GwangCount++;    sd.isHavingBGwang = true; }
-            else if ((card.cardData.cardProperty & eProperty.Gwang)        != 0)    sd.GwangCount++;
+            if ((card.cardData.cardProperty & eProperty.Junk)         != 0)    sd.JunkCount++;
+            if ((card.cardData.cardProperty & eProperty.DoubleNine)   != 0)    sd.isHavingDoubleNine = true; 
+            if ((card.cardData.cardProperty & eProperty.Double)       != 0)    sd.JunkCount += 2;
 
-            if ((card.cardData.cardProperty & eProperty.GODORI)            != 0)  { sd.GodoriCount++;   sd.AnimalCount++; }
-            else if ((card.cardData.cardProperty & eProperty.ANIMAL)       != 0)    sd.AnimalCount++;
+            if ((card.cardData.cardProperty & eProperty.Godori)       != 0)    sd.GodoriCount++; 
+            if ((card.cardData.cardProperty & eProperty.Animal)       != 0)    sd.AnimalCount++;
 
-            if ((card.cardData.cardProperty & eProperty.LEAF_BAND)         != 0)  { sd.LeafBandCount++; sd.BandCount++; }
-            else if ((card.cardData.cardProperty & eProperty.RED_BAND)     != 0)  { sd.RedBandCount++;  sd.BandCount++; }
-            else if ((card.cardData.cardProperty & eProperty.BLUE_BAND)    != 0)  { sd.BlueBandCount++; sd.BandCount++; }
-            else if ((card.cardData.cardProperty & eProperty.BBand)        != 0)  { sd.BandCount++;     sd.isHavingBBand = true; }
+            if ((card.cardData.cardProperty & eProperty.BGwang)       != 0)    sd.isHavingBGwang = true; 
+            if ((card.cardData.cardProperty & eProperty.Gwang)        != 0)    sd.GwangCount++;
 
-            if ((card.cardData.cardProperty & eProperty.DOUBLE_NINE)       != 0)  { sd.JunkCount+= 2;   sd.isHavingDoubleNine = true; }
-            else if ((card.cardData.cardProperty & eProperty.DOUBLE)       != 0)    sd.JunkCount+=2;
-            else if (card.cardData.cardProperty == eProperty.NONE)                sd.JunkCount++;
+            if ((card.cardData.cardProperty & eProperty.LeafBand)     != 0)    sd.LeafBandCount++;
+            if ((card.cardData.cardProperty & eProperty.RedBand)      != 0)    sd.RedBandCount++; 
+            if ((card.cardData.cardProperty & eProperty.BlueBand)     != 0)    sd.BlueBandCount++;
+            if ((card.cardData.cardProperty & eProperty.BBand)        != 0)    sd.isHavingBBand = true;  
+            if ((card.cardData.cardProperty & eProperty.Band)         != 0)    sd.BandCount++; 
         }
     }
 

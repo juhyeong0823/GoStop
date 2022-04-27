@@ -20,4 +20,5 @@ public class ScoreData
 
     public int shakedCount = 0;
     public int goCount = 0;
+    public int paulkCount = 0;
 }

@@ -10,8 +10,11 @@ public class Card : MonoBehaviour, IPointerDownHandler
 
     GameManager gm;
 
+    public Image img;
+
     private void Awake()
     {
+        img = GetComponent<Image>();
         gm = GameManager.Instance;
     }
 
@@ -24,7 +27,15 @@ public class Card : MonoBehaviour, IPointerDownHandler
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        gm.PutCard(this);
+        if(GameManager.Instance.isUserTurn)
+        {
+            gm.PutCard(this);
+        }
+    }
 
+    public void MoveCardToGrid(CardGrid grid)
+    {
+        this.transform.parent = grid.transform;
+        grid.placedCards.Add(this);
     }
 }

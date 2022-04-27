@@ -12,13 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 915dccbc5a43b1d46ad99a94d76bc34f, type: 3}
   m_Name: 07_Jul1
   m_EditorClassIdentifier: 
-  cardNameStr: "\uC2F8\uB9AC_1"
-  cardProperty: 4
+  cardProperty: 8
   cardMonth: 7
-  cardLevel: 4
   icon: {fileID: 121065650542551431, guid: 1ce4d65b6ced9e049b853d9fe817e9b1, type: 3}
-  characterSprite: {fileID: 21300000, guid: 7c379320fb7330448bdb86094c9ba0ab, type: 3}
-  skillDesc: 16
-  skillIcon: {fileID: 0}
-  synergyIcons: []
-  charDataSO: {fileID: 11400000, guid: 65ff2adbd8aba234a9fc8ca7b059fbb9, type: 2}

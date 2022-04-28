@@ -5,58 +5,37 @@ using UnityEngine.UI;
 
 public class ShakeUI : MonoBehaviour
 {
-    [SerializeField] private Image lCardImg;
-    [SerializeField] private Image centerCardImg;
-    [SerializeField] private Image rCardImg;
-
-    [HideInInspector] public Card lCard;
-    [HideInInspector] public Card centerCard;
-    [HideInInspector] public Card rCard;
+    [HideInInspector] public CardBase clickedCard;
     [HideInInspector] public CardGrid grid;
 
-    public void SetData(Card lCard, Card centerCard, Card rCard, CardGrid grid)
+    public void SetData(CardBase clickedCard, CardGrid grid)
     {
+        GameManager.Instance.isShaking = true;
         gameObject.SetActive(true);
 
-        this.lCard = lCard;
-        this.centerCard = centerCard;
-        this.rCard = rCard;
+        this.clickedCard = clickedCard;
         this.grid = grid;
-
-        lCardImg.sprite = this.lCard.cardData.icon;
-        centerCardImg.sprite = this.centerCard.cardData.icon;
-        rCardImg.sprite = this.rCard.cardData.icon;
     }
 
     void ClearData()
     {
-        lCard = null;
-        centerCard = null;
-        rCard = null;
         grid = null;
-
-        lCardImg.sprite = null;
-        centerCardImg.sprite = null;
-        rCardImg.sprite = null;
+        clickedCard = null;
 
         gameObject.SetActive(false);
+        GameManager.Instance.isShaking = false;
     }
 
-    public void ChooseLCard()
+    public void Shake()
     {
-        GameManager.Instance.OnShaked(lCard, grid);
+        GameManager.Instance.OnShaked(clickedCard, grid);
         ClearData();
     }
 
-    public void ChooseCenterCard()
+    public void NotShake()
     {
-        GameManager.Instance.OnShaked(centerCard, grid);
+        GameManager.Instance.OnShaked(clickedCard, grid, false);
         ClearData();
     }
 
-    public void ChooseRCard()
-    {
-        GameManager.Instance.OnShaked(rCard, grid);
-        ClearData();
-    }
 }

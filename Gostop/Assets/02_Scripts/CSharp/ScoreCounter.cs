@@ -15,11 +15,25 @@ public class ScoreCounter
     const int BLUEBAND_DATUM_LINE = 3; 
     const int REDBAND_DATUM_LINE  = 3;
 
-    
-
+    public int jum = 100; // Á¡´ç n¿ø
+    public int presdientReward = 1000;
     int magnification = 1;
     public int nagariCount = 0;
-    
+
+    public bool CheckPaulkCount(ScoreData scoreData)
+    {
+        if(scoreData.paulkCount >= 3)
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+    public void SetData(int jum)
+    {
+        this.jum = jum; 
+    }
 
     void Reset(ScoreData sd)
     {
@@ -39,11 +53,11 @@ public class ScoreCounter
         sd.isHavingDoubleNine = false;
     }
 
-    public void CheckCards(List<Card> cards, ScoreData sd)
+    public void CheckCards(List<CardBase> cards, ScoreData sd)
     {
         Reset(sd);
 
-        foreach (Card card in cards)
+        foreach (CardBase card in cards)
         {
             if ((card.cardData.cardProperty & eProperty.Junk)         != 0)    sd.JunkCount++;
             if ((card.cardData.cardProperty & eProperty.DoubleNine)   != 0)    sd.isHavingDoubleNine = true; 
@@ -63,8 +77,7 @@ public class ScoreCounter
         }
     }
 
-
-    public int GetMagnification(ScoreData winningPlayer, ScoreData other)
+    int GetMagnification(ScoreData winningPlayer, ScoreData other)
     {
         if (winningPlayer.AnimalCount >= 7)
             if (other.AnimalCount <= 0) magnification *= 2;
@@ -80,7 +93,7 @@ public class ScoreCounter
 
         magnification *= (int)(Mathf.Pow(2, winningPlayer.shakedCount));
 
-        return 1;
+        return magnification;
     }
 
     public int CalculateByGoCount(int score, int goCount)
@@ -89,9 +102,9 @@ public class ScoreCounter
 
         for(int i = 0; i< goCount; i++)
         {
-            if (i > 2) multiplyValue *= 2;
+            score += 1;
 
-            score += i + 1;
+            if (i > 2) multiplyValue *= 2;
         }
 
         return score * multiplyValue;
@@ -130,17 +143,37 @@ public class ScoreCounter
         plusValue = sd.AnimalCount - ANIMAL_DATUM_LINE;
         if (plusValue > 0) score += plusValue;
 
-        score = CalculateByGoCount(score, sd.goCount);
+
         return score;
     }
 
-    public int GetCalculatedScore(ScoreData sd, ScoreData other)
+    public int GetCalculatedScore()
     {
+        ScoreData sd = null;
+        ScoreData other = null;
+
+        if (GameManager.Instance.isUserTurn)
+        {
+            sd = GameManager.Instance.user.scoreData;
+            other = GameManager.Instance.ai.userData.scoreData;
+        }
+        else
+        {
+            other = GameManager.Instance.user.scoreData;
+            sd = GameManager.Instance.ai.userData.scoreData;
+        }
+
         int score = GetScore(sd);
 
+        score = CalculateByGoCount(score, GameManager.Instance.targetUserData.scoreData.goCount);
         score = CalculateByNagariCount(score);
         score *= GetMagnification(sd, other);
-
+        score *= jum;
         return score;
+    }
+
+    public int GetPresidentMoney()
+    {
+        return presdientReward;
     }
 }

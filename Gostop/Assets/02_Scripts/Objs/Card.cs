@@ -2,40 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
-public class Card : MonoBehaviour, IPointerDownHandler
+public class Card : CardBase
 {
-    public CardDataSO cardData;
-
-    GameManager gm;
-
-    public Image img;
-
-    private void Awake()
-    {
-        img = GetComponent<Image>();
-        gm = GameManager.Instance;
-    }
-
-    public void Init(CardDataSO cardData)
+    public override void Init(CardDataSO cardData)
     {
         this.cardData = cardData;
-        this.GetComponent<Image>().sprite = cardData.icon;
+        img.sprite = cardData.icon;
         this.name = cardData.name;
     }
 
-    public void OnPointerDown(PointerEventData eventData)
+    public override void OnPointerDown(PointerEventData eventData)
     {
-        if(GameManager.Instance.isUserTurn)
-        {
-            gm.PutCard(this);
-        }
-    }
-
-    public void MoveCardToGrid(CardGrid grid)
-    {
-        this.transform.parent = grid.transform;
-        grid.placedCards.Add(this);
+        if (!GameManager.Instance.isUserTurn || GameManager.Instance.isChoicing || GameManager.Instance.isShaking) return;
+        img.raycastTarget = false; ;
+        GameManager.Instance.PutCard(this);
     }
 }

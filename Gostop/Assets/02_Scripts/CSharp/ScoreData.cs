@@ -21,4 +21,9 @@ public class ScoreData
     public int shakedCount = 0;
     public int goCount = 0;
     public int paulkCount = 0;
+
+    public int saidGoScore = 100; // 처음엔 100으로 해서 else if문에 안 걸리도록.
+    public bool bFirstGo = true;
+
+
 }

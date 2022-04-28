@@ -7,9 +7,9 @@ public class TestAI
 {
     public UserData userData = new UserData();
 
-    public void Turn()
+    public IEnumerator Turn()
     {
-        Debug.Log("¤¾¤·");
+        yield return new WaitForSeconds(1.5f);
         GameManager.Instance.PutCard(GameManager.Instance.GetRandomCard(userData.utilizeCards));
     }
 }

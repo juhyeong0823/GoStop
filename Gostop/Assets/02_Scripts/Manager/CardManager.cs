@@ -9,23 +9,9 @@ public class CardManager : Singleton<CardManager>
 
     public Transform cvsTrm;
 
-    [Header("내 피들 놓을 위치")]
-    [SerializeField] private Transform myUtilizeCardsTrm;
-    [SerializeField] private Transform myGwangTrm;
-    [SerializeField] private Transform myAnimalsTrm;
-    [SerializeField] private Transform myBandTrm;
-    [SerializeField] private Transform myJunkTrm;
 
-    [Space(15)]
-
-    [Header("상대 피들 놓을 위치")]
-    [SerializeField] private Transform othersUtilizeCardsTrm;
-    [SerializeField] private Transform othersJunkTrm;
-    [SerializeField] private Transform othersBandTrm;
-    [SerializeField] private Transform othersGwangTrm;
-    [SerializeField] private Transform othersAnimalsTrm;
-
-    public Card cardPrefab;
+    public CardBase cardPrefab;
+    public CardBase bombPaybackCardObj;
 
     GameManager gm;
     private void Awake()
@@ -33,32 +19,30 @@ public class CardManager : Singleton<CardManager>
         gm = GameManager.Instance;
     }
 
-    public void TransportCard(Card card)
+    public void TransportCard(CardBase card)
     {
         Transform destination = null;
         eProperty e = card.cardData.cardProperty;
 
-        if (gm.isUserTurn)
-        {
-            if ((e & eProperty.Animal) != 0) destination = myAnimalsTrm;
-            else if ((e & eProperty.Gwang) != 0) destination = myGwangTrm;
-            else if ((e & eProperty.Band) != 0) destination = myBandTrm;
-            else  destination = myJunkTrm;
-        }
-        else
-        {
-            if ((e & eProperty.Animal) != 0) destination = othersAnimalsTrm;
-            else if ((e & eProperty.Gwang) != 0) destination = othersGwangTrm;
-            else if ((e & eProperty.Band) != 0)  destination = othersBandTrm;
-            else destination = othersJunkTrm;
-        }
+        if ((e & eProperty.Animal) != 0) destination = gm.targetUserData.animalsTrm;
+        else if ((e & eProperty.Gwang) != 0) destination = gm.targetUserData.gwangTrm; 
+        else if ((e & eProperty.Band) != 0) destination = gm.targetUserData.bandTrm; 
+        else  destination = gm.targetUserData.junkTrm; 
 
         card.transform.parent = destination;
 
     }
 
-    
-    void PushUtilizeCards(Transform parent, List<Card> pushCards) // 사용할 카드들 정렬해서 UI로 보내기
+    public void OnDroppedBomb(int paybackCardCount,Transform parent)
+    {
+        for(int i = 0; i< paybackCardCount; i++)
+        {
+            CardBase paybackCard = Instantiate(bombPaybackCardObj, parent);
+            GameManager.Instance.targetUserData.utilizeCards.Add(paybackCard);
+        }
+    }
+
+    void PushUtilizeCards(Transform parent, List<CardBase> pushCards) // 사용할 카드들 정렬해서 UI로 보내기
     {
         foreach (var card in pushCards) card.transform.parent = parent;
     }
@@ -66,15 +50,16 @@ public class CardManager : Singleton<CardManager>
     public void SetUtilizeCards(UserData user, UserData ai)
     {
         user.utilizeCards.Sort((x, y) => x.cardData.cardMonth.CompareTo(y.cardData.cardMonth));
-        PushUtilizeCards(myUtilizeCardsTrm, user.utilizeCards);
-        PushUtilizeCards(othersUtilizeCardsTrm, ai.utilizeCards);
+        PushUtilizeCards(user.utilizeCardsTrm, user.utilizeCards);
+        PushUtilizeCards(ai.utilizeCardsTrm, ai.utilizeCards);
+
     }
 
     public void SetUseCardList()
     {
         foreach (var item in allCardsData)
         {
-            Card card = Instantiate(cardPrefab, cvsTrm);
+            CardBase card = Instantiate(cardPrefab, cvsTrm);
             card.Init(item);
             gm.useCardList.Add(card);
             card.img.raycastTarget = false;
@@ -84,7 +69,7 @@ public class CardManager : Singleton<CardManager>
 
     void GiveCard(UserData userData)
     {
-        Card card = gm.GetRandomCard(gm.useCardList);
+        CardBase card = gm.GetRandomCard(gm.useCardList);
         userData.utilizeCards.Add(card);
         card.gameObject.SetActive(true);
         card.img.raycastTarget = true;
@@ -92,7 +77,7 @@ public class CardManager : Singleton<CardManager>
 
     void PlaceCard() // 알아서 4번 돌림
     {
-        Card card = gm.GetRandomCard(gm.useCardList); // 랜덤으로 하나 뽑고
+        CardBase card = gm.GetRandomCard(gm.useCardList); // 랜덤으로 하나 뽑고
         CardGrid grid = CardFinder.GetSameMonthCardsGrid(gm.cardGrids, card);
         if (grid == null)
         {
@@ -119,9 +104,16 @@ public class CardManager : Singleton<CardManager>
         for (int i = 0; i < 2; i++) GiveCard(ai);
     }
 
-    public List<Card> GetSameMonthCards(Card card)
+    public List<CardBase> GetSameMonthCards(CardBase card)
     {
-        return GameManager.Instance.user.utilizeCards.FindAll((x) => x.cardData.cardMonth == card.cardData.cardMonth);
+        List<CardBase> list = new List<CardBase>();
+        try
+        {
+            list = GameManager.Instance.targetUserData.utilizeCards.FindAll((x) => x.cardData.cardMonth == card.cardData.cardMonth);
+        }
+        catch { }
+
+        return list;
     }
 
 

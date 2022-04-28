@@ -8,11 +8,11 @@ public class ChoiceCardUI : MonoBehaviour
     [SerializeField] private Image lCardImg;
     [SerializeField] private Image rCardImg;
 
-    [HideInInspector] public Card lCard;
-    [HideInInspector] public Card rCard;
+    [HideInInspector] public CardBase lCard;
+    [HideInInspector] public CardBase rCard;
     [HideInInspector] public CardGrid grid;
 
-    public void SetData(Card lCard, Card rCard, CardGrid grid)
+    public void SetData(CardBase lCard, CardBase rCard, CardGrid grid)
     {
         this.lCard = lCard;
         this.rCard = rCard;

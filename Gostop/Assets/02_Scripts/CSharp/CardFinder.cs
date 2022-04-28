@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class CardFinder 
 {
-    public static CardGrid GetSameMonthCardsGrid(List<CardGrid> grids, Card putCard)
+    public static CardGrid GetSameMonthCardsGrid(List<CardGrid> grids, CardBase putCard)
     {
         return grids.Find((x) => x.curPlacedCardMonth == putCard.cardData.cardMonth);
     }

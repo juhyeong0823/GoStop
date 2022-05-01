@@ -12,6 +12,8 @@ public class StopUI : MonoBehaviour
     {
         moneyText.text = string.Empty;
         gameObject.SetActive(true);
+        GameManager.Instance.isGameFinished = true;
+
         if (GameManager.Instance.isUserTurn)
         {
             victoryOfDefeatText.text = "»ï¿¬»¶ ½Â¸®!";
@@ -20,12 +22,13 @@ public class StopUI : MonoBehaviour
         {
             victoryOfDefeatText.text = "»ï¿¬»¶ ÆÐ¹è..";
         }
+
+        GameManager.Instance.saveManager.Save(GameManager.Instance.user.money);
     }
 
     public void OnStop(bool isPresident = false, bool isNagari = false)
     {
         moneyText.text = string.Empty;
-
         gameObject.SetActive(true);
         if (isNagari)
         {
@@ -44,10 +47,12 @@ public class StopUI : MonoBehaviour
                 victoryOfDefeatText.text = "ÆÐ¹è..";
                 moneyText.text = $"- {GameManager.Instance.sc.GetCalculatedScore()}¿ø";
             }
+
+            GameManager.Instance.sc.SetMoney();
+            GameManager.Instance.saveManager.Save(GameManager.Instance.user.money);
         }
         else
         {
-            Debug.Log("¤¾¤·¤·¤¾¤·¤±¤·¤·¤±¤¤¤·");
             if (GameManager.Instance.isUserTurn)
             {
                 victoryOfDefeatText.text = "ÃÑÅë ½Â¸®!";
@@ -58,9 +63,11 @@ public class StopUI : MonoBehaviour
                 victoryOfDefeatText.text = "ÃÑÅë ÆÐ¹è..";
                 moneyText.text = $"- {GameManager.Instance.sc.GetPresidentMoney()}¿ø";
             }
+            GameManager.Instance.sc.SetMoney();
         }
-        
+        GameManager.Instance.saveManager.Save(GameManager.Instance.user.money);
     }
+
 
     public Button reStart;
 

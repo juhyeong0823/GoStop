@@ -9,6 +9,8 @@ public class UserData
     public List<CardBase> utilizeCards = new List<CardBase>(); // 상대가 사용 가능한 패들
     public ScoreData scoreData = new ScoreData();
 
+    public int money = 0;
+
     public Transform utilizeCardsTrm;
     public Transform gwangTrm;
     public Transform animalsTrm;

@@ -91,6 +91,8 @@ public class ScoreCounter
         if (winningPlayer.JunkCount >= 10)
             if (other.JunkCount <= 4 && other.JunkCount != 0) magnification *= 2;
 
+        if (other.goCount >= 1) magnification *= 2;
+
         magnification *= (int)(Mathf.Pow(2, winningPlayer.shakedCount));
 
         return magnification;
@@ -169,7 +171,20 @@ public class ScoreCounter
         score = CalculateByNagariCount(score);
         score *= GetMagnification(sd, other);
         score *= jum;
+
         return score;
+    }
+
+    public void SetMoney()
+    {
+        if (GameManager.Instance.isUserTurn)
+        {
+            GameManager.Instance.user.money += GameManager.Instance.sc.GetCalculatedScore();
+        }
+        else
+        {
+            GameManager.Instance.user.money -= GameManager.Instance.sc.GetCalculatedScore();
+        }
     }
 
     public int GetPresidentMoney()

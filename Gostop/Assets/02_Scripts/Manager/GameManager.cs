@@ -20,9 +20,13 @@ public class GameManager : Singleton<GameManager>
     public bool isUserTurn = true;
 
     public bool isFirstChecking = true;
+    public bool isGameFinished = false;
+
 
     public ScoreCounter sc = new ScoreCounter();
     public Rule rule = new Rule();
+    public SaveManager saveManager = new SaveManager();
+
 
     public UserData user = new UserData();
     public TestAI ai = new TestAI();
@@ -31,7 +35,10 @@ public class GameManager : Singleton<GameManager>
 
     private void Start()
     {
+        user.money = saveManager.Load().money;
+        UIManager.Instance.SetDatas(true, 0);
         GameStart();
+        
     }
 
     private void Update()
@@ -58,7 +65,6 @@ public class GameManager : Singleton<GameManager>
 
     public void TakeOtherPlayerCard()
     {
-        Debug.Log("ぞしぞし");
         if (isUserTurn)
         {
             CardBase takeCard = null;
@@ -92,7 +98,6 @@ public class GameManager : Singleton<GameManager>
             
             if (takeCard != null)
             {
-                Debug.Log(takeCard.name);
                 user.ownCards.Remove(takeCard);
                 ai.userData.ownCards.Add(takeCard);
                 takeCard.transform.parent = ai.userData.junkTrm;
@@ -102,6 +107,9 @@ public class GameManager : Singleton<GameManager>
 
     public void TryExecuteChoiceCallback()
     {
+        if (isGameFinished) return;
+
+
         if (choiceCallBackQueue.Count > 0)
         {
             choiceCallBackQueue.Dequeue()?.Invoke();
@@ -128,7 +136,6 @@ public class GameManager : Singleton<GameManager>
     public void OnTurnFinished()
     {
         CheckScore(targetUserData.ownCards, targetUserData.scoreData);
-        sc.CheckPaulkCount(targetUserData.scoreData);
         rule.Sweep();
     }
 
@@ -137,6 +144,8 @@ public class GameManager : Singleton<GameManager>
     {
         sc.CheckCards(checkCardList, scoreData);
         int score = sc.GetScore(scoreData);
+        UIManager.Instance.SetDatas(isUserTurn, score);
+
         if(rule.CanGo(score, scoreData))
         {
             if(targetUserData.utilizeCards.Count == 0)

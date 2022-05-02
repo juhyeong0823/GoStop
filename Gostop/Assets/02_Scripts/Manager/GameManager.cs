@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using DG.Tweening;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -52,9 +53,7 @@ public class GameManager : Singleton<GameManager>
         CardManager.Instance.SetPlayersUtilizeCard(user,ai.userData);
         CardManager.Instance.SetUtilizeCards(user, ai.userData);
 
-
         rule.CheckPresident();
-
         SetFollowCardQueue();
     }
 
@@ -80,10 +79,8 @@ public class GameManager : Singleton<GameManager>
             {
                 ai.userData.ownCards.Remove(takeCard);
                 user.ownCards.Add(takeCard);
-                takeCard.transform.parent = user.junkTrm;
-                Debug.Log(takeCard.name);
+                takeCard.transform.DOMove(user.junkTrm.position, 0.15f, false);
             }
-            
         }
         else
         {
@@ -100,7 +97,7 @@ public class GameManager : Singleton<GameManager>
             {
                 user.ownCards.Remove(takeCard);
                 ai.userData.ownCards.Add(takeCard);
-                takeCard.transform.parent = ai.userData.junkTrm;
+                takeCard.transform.DOMove(ai.userData.junkTrm.position, 0.15f, false);
             }
         }
     }
@@ -120,6 +117,7 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+
     public void SetTurn()
     {
         if (isUserTurn)
@@ -138,7 +136,6 @@ public class GameManager : Singleton<GameManager>
         CheckScore(targetUserData.ownCards, targetUserData.scoreData);
         rule.Sweep();
     }
-
     
     public void CheckScore(List<CardBase> checkCardList, ScoreData scoreData)
     {
@@ -249,6 +246,7 @@ public class GameManager : Singleton<GameManager>
     }
 
 
+
     CardGrid targetGrid = null;
 
     public Action OnShakedCallback;
@@ -286,9 +284,8 @@ public class GameManager : Singleton<GameManager>
                 case 1: // 하나 있으면 그 친구한테 우선 가기. -> 뻑 가능성
                     if (cardList.Count == 3) // 폭탄
                     {
-                        rule.Bomb(2); // 연출같은거 여기서?
-
                         foreach (var item in cardList) targetUserData.utilizeCards.Remove(item);
+                        rule.Bomb(2); // 연출같은거 여기서?
 
                         OnScored(targetGrid.placedCards[0],targetGrid); // 바닥 패 먹고
                         while (cardList.Count > 0)
@@ -309,13 +306,9 @@ public class GameManager : Singleton<GameManager>
                     if (cardList.Count == 2)
                     {
                         foreach (var item in cardList) targetUserData.utilizeCards.Remove(item);
-
                         rule.Bomb(1);
 
-                        while (targetGrid.placedCards.Count > 0)
-                        {
-                            OnScored(targetGrid.placedCards[0], targetGrid);
-                        }
+                        while (targetGrid.placedCards.Count > 0) OnScored(targetGrid.placedCards[0], targetGrid);
 
                         while (cardList.Count > 0)
                         {
@@ -330,11 +323,11 @@ public class GameManager : Singleton<GameManager>
 
                         card.MoveCardToGrid(targetGrid);
 
-                        choiceCallBackQueue.Enqueue(() =>
+                        choiceCallBackQueue.Enqueue(() => 
                             ChoiceCard(targetGrid.placedCards[0], targetGrid.placedCards[1], targetGrid));
+
                         putCardQueue.Enqueue(card);
                     }
-                        
                     break;
 
                 case 3: // 3개 있으면 다 가져오고 
@@ -420,9 +413,9 @@ public class GameManager : Singleton<GameManager>
                     break;
             }
         }
+        TryExecuteChoiceCallback();
 
         CardManager.Instance.TakePairCard(targetGrid);
-        TryExecuteChoiceCallback();
 
         targetGrid = null;
     }

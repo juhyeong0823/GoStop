@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class CardBase : MonoBehaviour, IPointerDownHandler
 {
@@ -22,7 +23,7 @@ public class CardBase : MonoBehaviour, IPointerDownHandler
 
     public void MoveCardToGrid(CardGrid grid)
     {
-        this.transform.parent = grid.transform;
         grid.placedCards.Add(this);
+        transform.DOMove(grid.transform.position, 0.15f, true).OnComplete(() => transform.parent = grid.transform);
     }
 }

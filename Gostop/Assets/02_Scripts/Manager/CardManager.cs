@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using DG.Tweening;
 public class CardManager : Singleton<CardManager>
 {
     public List<CardDataSO> allCardsData = new List<CardDataSO>(); // 복사해서 쓸 리스트
@@ -27,10 +27,9 @@ public class CardManager : Singleton<CardManager>
         if ((e & eProperty.Animal) != 0) destination = gm.targetUserData.animalsTrm;
         else if ((e & eProperty.Gwang) != 0) destination = gm.targetUserData.gwangTrm; 
         else if ((e & eProperty.Band) != 0) destination = gm.targetUserData.bandTrm; 
-        else  destination = gm.targetUserData.junkTrm; 
+        else  destination = gm.targetUserData.junkTrm;
 
-        card.transform.parent = destination;
-
+        card.transform.DOMove(destination.transform.position, 0.15f, false).OnComplete(() => card.transform.parent = destination.transform);
     }
 
     public void OnDroppedBomb(int paybackCardCount,Transform parent)

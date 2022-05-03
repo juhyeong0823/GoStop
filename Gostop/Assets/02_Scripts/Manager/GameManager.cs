@@ -158,7 +158,7 @@ public class GameManager : Singleton<GameManager>
         {
             if(user.utilizeCards.Count == 0 && ai.userData.utilizeCards.Count == 0)
             {
-                UIManager.Instance.gostopUI.stopUI.OnStop(true);
+                UIManager.Instance.gostopUI.stopUI.OnStop(false, true);
             }
             else
             {
@@ -413,9 +413,9 @@ public class GameManager : Singleton<GameManager>
                     break;
             }
         }
+        CardManager.Instance.TakePairCard(targetGrid);
         TryExecuteChoiceCallback();
 
-        CardManager.Instance.TakePairCard(targetGrid);
 
         targetGrid = null;
     }

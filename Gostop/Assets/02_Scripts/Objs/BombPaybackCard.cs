@@ -8,10 +8,12 @@ public class BombPaybackCard : CardBase
 {
     public override void OnPointerDown(PointerEventData eventData)
     {
+        if (GameManager.Instance.isProcessingGame) return;
         img.raycastTarget = false; ;
         Putcard();
         GameManager.Instance.targetUserData.utilizeCards.Remove(this);
         Destroy(this.gameObject);
+
     }
 
     public void Putcard()

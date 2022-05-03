@@ -13,21 +13,22 @@ public class GameManager : Singleton<GameManager>
     public List<CardGrid> cardGrids = new List<CardGrid>(); // 카드를 깔 위치, 기존과 다르게 그냥 빈 곳을 찾아서 찾아간다
     public List<int> takenMonthList = new List<int>();  // 먹힌 놈들 월 저장
 
+    public Queue<Action> takeCardCallbackQueue = new Queue<Action>();
     public Queue<Action> choiceCallBackQueue = new Queue<Action>(); // 두개의 패를 치고, 나중에 고르도록
     public Queue<CardBase> putCardQueue = new Queue<CardBase>(); // 골랐을 때 애도 먹어버리면 됨
 
     public bool isChoicing = false;
     public bool isShaking = false;
     public bool isUserTurn = true;
+    public bool isProcessingGame = false;
+
 
     public bool isFirstChecking = true;
     public bool isGameFinished = false;
 
-
     public ScoreCounter sc = new ScoreCounter();
     public Rule rule = new Rule();
     public SaveManager saveManager = new SaveManager();
-
 
     public UserData user = new UserData();
     public TestAI ai = new TestAI();
@@ -39,7 +40,6 @@ public class GameManager : Singleton<GameManager>
         user.money = saveManager.Load().money;
         UIManager.Instance.SetDatas(true, 0);
         GameStart();
-        
     }
 
     private void Update()
@@ -77,9 +77,15 @@ public class GameManager : Singleton<GameManager>
 
             if(takeCard != null)
             {
-                ai.userData.ownCards.Remove(takeCard);
-                user.ownCards.Add(takeCard);
-                takeCard.transform.DOMove(user.junkTrm.position, 0.15f, false);
+                takeCardCallbackQueue.Enqueue(() =>
+                {
+                    ai.userData.ownCards.Remove(takeCard);
+                    user.ownCards.Add(takeCard);
+                    takeCard.transform.DOMove(user.junkTrm.position, 0.15f, false);
+
+                    CheckScore(ai.userData.ownCards, ai.userData.scoreData);
+                    CheckScore(user.ownCards, user.scoreData);
+                });
             }
         }
         else
@@ -95,9 +101,14 @@ public class GameManager : Singleton<GameManager>
             
             if (takeCard != null)
             {
-                user.ownCards.Remove(takeCard);
-                ai.userData.ownCards.Add(takeCard);
-                takeCard.transform.DOMove(ai.userData.junkTrm.position, 0.15f, false);
+                takeCardCallbackQueue.Enqueue(() =>
+                {
+                    user.ownCards.Remove(takeCard);
+                    ai.userData.ownCards.Add(takeCard);
+                    takeCard.transform.DOMove(ai.userData.junkTrm.position, 0.15f, false);
+                    CheckScore(ai.userData.ownCards, ai.userData.scoreData);
+                    CheckScore(user.ownCards, user.scoreData);
+                });
             }
         }
     }
@@ -106,37 +117,50 @@ public class GameManager : Singleton<GameManager>
     {
         if (isGameFinished) return;
 
-
         if (choiceCallBackQueue.Count > 0)
         {
             choiceCallBackQueue.Dequeue()?.Invoke();
         }
         else
         {
-            OnTurnFinished();
+            TryExecuteTakeCardCallback();
         }
+        
     }
+    
+    public void TryExecuteTakeCardCallback()
+    {
+        if (takeCardCallbackQueue.Count > 0)
+        {
+            takeCardCallbackQueue.Dequeue()?.Invoke();
+            TryExecuteTakeCardCallback();
+        }
+        else
+        {
+            TakePairCard?.Invoke();
+            CheckScore(targetUserData.ownCards, targetUserData.scoreData);
+        }
 
+    }
 
     public void SetTurn()
     {
         if (isUserTurn)
         {
+            Debug.Log("유저턴");
             isUserTurn = false;
+            isProcessingGame = true;
             StartCoroutine(ai.Turn());
         }
         else
         {
+            Debug.Log("AI턴");
             isUserTurn = true;
+            isProcessingGame = false;
         }
     }
 
-    public void OnTurnFinished()
-    {
-        CheckScore(targetUserData.ownCards, targetUserData.scoreData);
-        rule.Sweep();
-    }
-    
+
     public void CheckScore(List<CardBase> checkCardList, ScoreData scoreData)
     {
         sc.CheckCards(checkCardList, scoreData);
@@ -145,6 +169,7 @@ public class GameManager : Singleton<GameManager>
 
         if(rule.CanGo(score, scoreData))
         {
+            Debug.Log("CanGo");
             if(targetUserData.utilizeCards.Count == 0)
             {
                 UIManager.Instance.gostopUI.stopUI.OnStop();
@@ -156,7 +181,8 @@ public class GameManager : Singleton<GameManager>
         }
         else
         {
-            if(user.utilizeCards.Count == 0 && ai.userData.utilizeCards.Count == 0)
+            Debug.Log("Go못함!");
+            if (user.utilizeCards.Count == 0 && ai.userData.utilizeCards.Count == 0)
             {
                 UIManager.Instance.gostopUI.stopUI.OnStop(true);
             }
@@ -200,7 +226,7 @@ public class GameManager : Singleton<GameManager>
     {
         clickedCard.img.raycastTarget = false;
         cardGrid.Set(clickedCard);
-        OnShakedCallback.Invoke(); // 이거 없으면 지랄난거라 널체크하면 안될듯..
+        OnShakedCallback.Invoke(); // FollowCard();
         OnShakedCallback = null;
 
         if(bShaked)
@@ -245,16 +271,23 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
-
-
     CardGrid targetGrid = null;
 
     public Action OnShakedCallback;
+
+    public void PutTerm(List<CardBase> cards, CardGrid grid)
+    {
+        foreach(var item in cards)
+        {
+            item.MoveCardToGrid(grid);
+        }
+    }
 
     public void PutCard(CardBase card) // 내가 낸 그리드를 가지고 있으면 좋을듯?ai.scoreData
     {
         SetTargetUserData();
 
+        targetGrid = null;
         targetGrid = CardFinder.GetSameMonthCardsGrid(cardGrids, card);
         List<CardBase> cardList = CardManager.Instance.GetSameMonthCards(card);
 
@@ -285,15 +318,21 @@ public class GameManager : Singleton<GameManager>
                     if (cardList.Count == 3) // 폭탄
                     {
                         foreach (var item in cardList) targetUserData.utilizeCards.Remove(item);
-                        rule.Bomb(2); // 연출같은거 여기서?
+                        PutTerm(cardList, targetGrid);
 
-                        OnScored(targetGrid.placedCards[0],targetGrid); // 바닥 패 먹고
-                        while (cardList.Count > 0)
+                        takeCardCallbackQueue.Enqueue(() =>
                         {
-                            OnScored(cardList[0]);
-                            cardList.RemoveAt(0);
-                        }
-                        TakeOtherPlayerCard();
+                            CardGrid grid = targetGrid;
+                            rule.Bomb(2); // 연출같은거 여기서?
+
+                            while (grid.placedCards.Count > 0)
+                            {
+                                OnScored(grid.placedCards[0], grid);
+                                grid.placedCards.RemoveAt(0);
+                            }
+                            TakeOtherPlayerCard();
+                        });
+                        
                     }
                     else
                     {
@@ -306,42 +345,53 @@ public class GameManager : Singleton<GameManager>
                     if (cardList.Count == 2)
                     {
                         foreach (var item in cardList) targetUserData.utilizeCards.Remove(item);
-                        rule.Bomb(1);
+                        PutTerm(cardList, targetGrid);
 
-                        while (targetGrid.placedCards.Count > 0) OnScored(targetGrid.placedCards[0], targetGrid);
-
-                        while (cardList.Count > 0)
+                        takeCardCallbackQueue.Enqueue(() =>
                         {
-                            OnScored(cardList[0]);
-                            cardList.RemoveAt(0);
-                        }
-                        TakeOtherPlayerCard();
+                            CardGrid grid = targetGrid;
+                            rule.Bomb(1);
+
+                            while (grid.placedCards.Count > 0)
+                            {
+                                OnScored(grid.placedCards[0], grid);
+                            }
+ 
+                            TakeOtherPlayerCard();
+                        });
+                       
                     }
                     else
                     {
                         targetUserData.utilizeCards.Remove(card);
-
                         card.MoveCardToGrid(targetGrid);
 
-                        choiceCallBackQueue.Enqueue(() => 
-                            ChoiceCard(targetGrid.placedCards[0], targetGrid.placedCards[1], targetGrid));
-
+                        choiceCallBackQueue.Enqueue(() =>
+                        {
+                            CardGrid grid = targetGrid;
+                            ChoiceCard(grid.placedCards[0], grid.placedCards[1], grid);
+                        });
+                            
                         putCardQueue.Enqueue(card);
                     }
                     break;
 
                 case 3: // 3개 있으면 다 가져오고 
                     targetUserData.utilizeCards.Remove(card);
-                    while (targetGrid.placedCards.Count > 0)
+                    card.MoveCardToGrid(targetGrid);
+                    takeCardCallbackQueue.Enqueue(() =>
                     {
-                        OnScored(targetGrid.placedCards[0],targetGrid);
-                    }
+                        CardGrid grid = targetGrid;
+                        rule.Shake();
 
-                    OnScored(card);
-                    rule.Shake();
-                    targetGrid.Reset();
+                        while (grid.placedCards.Count > 0)
+                        {
+                            OnScored(grid.placedCards[0], grid);
+                        }
 
-                    TakeOtherPlayerCard();
+                        grid.Reset();
+                        TakeOtherPlayerCard();
+                    });
                     break;
             }
 
@@ -369,14 +419,22 @@ public class GameManager : Singleton<GameManager>
             switch (count)
             {
                 case 1: // 뒷패를 깠는데 하나만 있다는 거면, 무조건 가져오면 됨.
-                    if (putCard.cardData.cardMonth == followCard.cardData.cardMonth)
+                    followCard.MoveCardToGrid(followCardTargetGrid);
+                    takeCardCallbackQueue.Enqueue(() =>
                     {
-                        rule.Kiss();
-                    }
+                        if (putCard.cardData.cardMonth == followCard.cardData.cardMonth)
+                        {
+                            rule.Kiss();
+                        }
 
-                    OnScored(followCard);
-                    OnScored(followCardTargetGrid.placedCards[0], followCardTargetGrid);
-                    followCardTargetGrid.Reset();
+                        while (followCardTargetGrid.placedCards.Count > 0)
+                        {
+                            OnScored(followCardTargetGrid.placedCards[0], followCardTargetGrid);
+                        }
+
+                        followCardTargetGrid.Reset();
+                    });
+                    
                     break;
 
                 case 2: // 두 개가 있다는 거면 둘 중 하나를 선택하게 하면 됨.
@@ -395,28 +453,43 @@ public class GameManager : Singleton<GameManager>
                     break;
 
                 case 3: // 3개 있으면 다 가져오고 
-                    if (putCard.cardData.cardMonth == followCard.cardData.cardMonth)
+                    followCard.MoveCardToGrid(followCardTargetGrid);
+
+                    if (putCard.cardData.cardMonth == followCard.cardData.cardMonth) // 앞에서 3개중에 하나 고르는 액션 삭제 해줘야함
                     {
-                        //따닥
+                        putCardQueue.Clear();
+                        choiceCallBackQueue.Clear();
                     }
 
-
-                    while (followCardTargetGrid.placedCards.Count > 0)
+                    takeCardCallbackQueue.Enqueue(() =>
                     {
-                        OnScored(followCardTargetGrid.placedCards[0], followCardTargetGrid);
-                    }
+                        if (putCard.cardData.cardMonth == followCard.cardData.cardMonth)
+                        {
+                            //따닥
+                        }
 
-                    OnScored(followCard); // 내가 낸 것도 가져오기.
-                    choiceCallBackQueue.Clear();
-                    followCardTargetGrid.Reset();
-                    TakeOtherPlayerCard();
+                        while (followCardTargetGrid.placedCards.Count > 0)
+                        {
+                            OnScored(followCardTargetGrid.placedCards[0], followCardTargetGrid);
+                        }
+
+                        choiceCallBackQueue.Clear();
+                        followCardTargetGrid.Reset();
+                        TakeOtherPlayerCard();
+                    });
+                    
                     break;
             }
         }
+        TakePairCard = (() =>
+        {
+            CardGrid grid = targetGrid;
+            CardManager.Instance.TakePairCard(grid);
+        });
+
+        rule.Sweep();// 콜백으로 넣어주는거라 지금 있어야 할 듯 ..
         TryExecuteChoiceCallback();
-
-        CardManager.Instance.TakePairCard(targetGrid);
-
-        targetGrid = null;
     }
+
+    public Action TakePairCard;
 }

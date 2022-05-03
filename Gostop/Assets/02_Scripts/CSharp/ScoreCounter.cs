@@ -16,7 +16,7 @@ public class ScoreCounter
     const int REDBAND_DATUM_LINE  = 3;
 
     public int jum = 100; // 점당 n원
-    public int presdientReward = 1000;
+    public int PresdientScore = 10;
     int magnification = 1;
     public int nagariCount = 0;
 
@@ -79,22 +79,23 @@ public class ScoreCounter
 
     int GetMagnification(ScoreData winningPlayer, ScoreData other)
     {
-        if (winningPlayer.AnimalCount >= 7)
-            if (other.AnimalCount <= 0) magnification *= 2;
+        if (winningPlayer.AnimalCount >= 7 && other.AnimalCount <= 0) magnification *= 2;
 
-        if (winningPlayer.BandCount >= 5)
-            if (other.BandCount <= 0) magnification *= 2;
+        if (winningPlayer.BandCount >= 5 && other.BandCount <= 0) magnification *= 2;
 
-        if (winningPlayer.GwangCount >= 3)
-            if (other.GwangCount <= 0) magnification *= 2;
+        if (winningPlayer.GwangCount >= 3 && other.GwangCount <= 0) magnification *= 2;
 
-        if (winningPlayer.JunkCount >= 10)
-            if (other.JunkCount <= 4 && other.JunkCount != 0) magnification *= 2;
+        if (winningPlayer.JunkCount >= 10 && other.JunkCount <= 4 && other.JunkCount != 0) magnification *= 2;
 
         if (other.goCount >= 1) magnification *= 2;
 
-        magnification *= (int)(Mathf.Pow(2, winningPlayer.shakedCount));
+        for(int i =0; i< winningPlayer.shakedCount; i++)
+        {
+            magnification *= 2;
+        }
 
+
+        Debug.Log($"magnification : {magnification}");
         return magnification;
     }
 
@@ -102,12 +103,14 @@ public class ScoreCounter
     {
         int multiplyValue = 1;
 
-        for(int i = 0; i< goCount; i++)
+        for(int i = 0; i < goCount; i++)
         {
             score += 1;
 
-            if (i > 2) multiplyValue *= 2;
+            if (i >= 2) multiplyValue *= 2;
         }
+
+        Debug.Log($"점수 : {score}, 고에 의한 계산 점수 : {score * multiplyValue}");
 
         return score * multiplyValue;
     }
@@ -118,6 +121,7 @@ public class ScoreCounter
 
         for (int i = 0; i < nagariCount; i++) multiplyValue *= 2;
 
+        Debug.Log($"점수 : {score}, 나가리에 의한 계산 점수 : {score * multiplyValue}");
         return score * multiplyValue;
     }
 
@@ -145,11 +149,10 @@ public class ScoreCounter
         plusValue = sd.AnimalCount - ANIMAL_DATUM_LINE;
         if (plusValue > 0) score += plusValue;
 
-
         return score;
     }
 
-    public int GetCalculatedScore()
+    public int GetCalculatedScore(int defineScore = 0)
     {
         ScoreData sd = null;
         ScoreData other = null;
@@ -165,30 +168,40 @@ public class ScoreCounter
             sd = GameManager.Instance.ai.userData.scoreData;
         }
 
-        int score = GetScore(sd);
+        int score = 0;
+        if (defineScore == 0)
+        {
+            score = GetScore(sd);
 
-        score = CalculateByGoCount(score, GameManager.Instance.targetUserData.scoreData.goCount);
-        score = CalculateByNagariCount(score);
-        score *= GetMagnification(sd, other);
-        score *= jum;
+            score = CalculateByGoCount(score, GameManager.Instance.targetUserData.scoreData.goCount);
+            score = CalculateByNagariCount(score);
+            score *= GetMagnification(sd, other);
+            score *= jum;
+        }
+        else
+        {
+            score = defineScore;
+        }
+        
 
         return score;
     }
 
-    public void SetMoney()
+    public void SetMoney(int score = 0)
     {
         if (GameManager.Instance.isUserTurn)
         {
-            GameManager.Instance.user.money += GameManager.Instance.sc.GetCalculatedScore();
+            GameManager.Instance.user.money += GameManager.Instance.sc.GetCalculatedScore(score);
         }
         else
         {
-            GameManager.Instance.user.money -= GameManager.Instance.sc.GetCalculatedScore();
+            GameManager.Instance.user.money -= GameManager.Instance.sc.GetCalculatedScore(score);
         }
     }
 
     public int GetPresidentMoney()
     {
-        return presdientReward;
+        SetMoney(10);
+        return PresdientScore * jum;
     }
 }

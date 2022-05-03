@@ -9,7 +9,7 @@ public class TestAI
 
     public IEnumerator Turn()
     {
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(1f);
         GameManager.Instance.PutCard(GameManager.Instance.GetRandomCard(userData.utilizeCards));
     }
 }

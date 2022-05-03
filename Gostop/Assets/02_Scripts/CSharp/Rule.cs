@@ -137,6 +137,7 @@ public class Rule
         if(canSweep)
         {
             Debug.Log("¾µ!");
+
             GameManager.Instance.TakeOtherPlayerCard();
         }
     }

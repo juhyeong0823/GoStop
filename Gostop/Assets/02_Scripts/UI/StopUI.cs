@@ -47,9 +47,7 @@ public class StopUI : MonoBehaviour
                 victoryOfDefeatText.text = "ÆÐ¹è..";
                 moneyText.text = $"- {GameManager.Instance.sc.GetCalculatedScore()}¿ø";
             }
-
             GameManager.Instance.sc.SetMoney();
-            GameManager.Instance.saveManager.Save(GameManager.Instance.user.money);
         }
         else
         {

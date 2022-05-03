@@ -16,16 +16,7 @@ public class GostopUI : MonoBehaviour
         if (GameManager.Instance.isUserTurn)
         {
             goCountText.text = $"{GameManager.Instance.targetUserData.scoreData.goCount + 1}°í";
-
-            if (GameManager.Instance.isUserTurn)
-            {
-                scoreText.text = $"½ºÅé ½Ã{GameManager.Instance.sc.GetCalculatedScore()}¿ø È¹µæ";
-            }
-            else
-            {
-                scoreText.text = $"½ºÅé ½Ã{GameManager.Instance.sc.GetCalculatedScore()}¿ø È¹µæ";
-            }
-
+            scoreText.text = $"½ºÅé ½Ã{GameManager.Instance.sc.GetCalculatedScore()}¿ø È¹µæ";
             this.gameObject.SetActive(true);
         }
         else

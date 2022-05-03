@@ -7,7 +7,7 @@ public class CardManager : Singleton<CardManager>
 {
     public List<CardDataSO> allCardsData = new List<CardDataSO>(); // 복사해서 쓸 리스트
 
-    public Transform cvsTrm;
+    public Transform followCardTrm;
 
 
     public CardBase cardPrefab;
@@ -19,6 +19,11 @@ public class CardManager : Singleton<CardManager>
         gm = GameManager.Instance;
     }
 
+
+    private void Start()
+    {
+        Debug.Log("CardManager");
+    }
     public void TransportCard(CardBase card)
     {
         Transform destination = null;
@@ -58,7 +63,7 @@ public class CardManager : Singleton<CardManager>
     {
         foreach (var item in allCardsData)
         {
-            CardBase card = Instantiate(cardPrefab, cvsTrm);
+            CardBase card = Instantiate(cardPrefab, followCardTrm);
             card.Init(item);
             gm.useCardList.Add(card);
             card.img.raycastTarget = false;
@@ -106,12 +111,17 @@ public class CardManager : Singleton<CardManager>
     public List<CardBase> GetSameMonthCards(CardBase card)
     {
         List<CardBase> list = new List<CardBase>();
-        try
+        foreach(var item in GameManager.Instance.targetUserData.utilizeCards)
         {
-            list = GameManager.Instance.targetUserData.utilizeCards.FindAll((x) => x.cardData.cardMonth == card.cardData.cardMonth);
+            try
+            {
+                if (item.cardData.cardMonth == card.cardData.cardMonth)
+                {
+                    list.Add(item);
+                }
+            }
+            catch { }
         }
-        catch { }
-
         return list;
     }
 

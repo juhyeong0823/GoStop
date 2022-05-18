@@ -10,6 +10,6 @@ public class TestAI
     public IEnumerator Turn()
     {
         yield return new WaitForSeconds(1f);
-        GameManager.Instance.PutCard(GameManager.Instance.GetRandomCard(userData.utilizeCards));
+        MatgoManager.Instance.PutCard(MatgoManager.Instance.GetRandomCard(userData.utilizeCards));
     }
 }

@@ -79,6 +79,8 @@ public class ScoreCounter
 
     int GetMagnification(ScoreData winningPlayer, ScoreData other)
     {
+        magnification = 1;
+
         if (winningPlayer.AnimalCount >= 7 && other.AnimalCount <= 0) magnification *= 2;
 
         if (winningPlayer.BandCount >= 5 && other.BandCount <= 0) magnification *= 2;
@@ -157,15 +159,15 @@ public class ScoreCounter
         ScoreData sd = null;
         ScoreData other = null;
 
-        if (GameManager.Instance.isUserTurn)
+        if (MatgoManager.Instance.isUserTurn)
         {
-            sd = GameManager.Instance.user.scoreData;
-            other = GameManager.Instance.ai.userData.scoreData;
+            sd = MatgoManager.Instance.user.scoreData;
+            other = MatgoManager.Instance.ai.userData.scoreData;
         }
         else
         {
-            other = GameManager.Instance.user.scoreData;
-            sd = GameManager.Instance.ai.userData.scoreData;
+            other = MatgoManager.Instance.user.scoreData;
+            sd = MatgoManager.Instance.ai.userData.scoreData;
         }
 
         int score = 0;
@@ -173,7 +175,7 @@ public class ScoreCounter
         {
             score = GetScore(sd);
 
-            score = CalculateByGoCount(score, GameManager.Instance.targetUserData.scoreData.goCount);
+            score = CalculateByGoCount(score, MatgoManager.Instance.targetUser.scoreData.goCount);
             score = CalculateByNagariCount(score);
             score *= GetMagnification(sd, other);
             score *= jum;
@@ -189,19 +191,18 @@ public class ScoreCounter
 
     public void SetMoney(int score = 0)
     {
-        if (GameManager.Instance.isUserTurn)
+        if (MatgoManager.Instance.isUserTurn)
         {
-            GameManager.Instance.user.money += GameManager.Instance.sc.GetCalculatedScore(score);
+            MatgoManager.Instance.user.money += MatgoManager.Instance.sc.GetCalculatedScore(score);
         }
         else
         {
-            GameManager.Instance.user.money -= GameManager.Instance.sc.GetCalculatedScore(score);
+            MatgoManager.Instance.user.money -= MatgoManager.Instance.sc.GetCalculatedScore(score);
         }
     }
 
     public int GetPresidentMoney()
     {
-        SetMoney(10);
         return PresdientScore * jum;
     }
 }

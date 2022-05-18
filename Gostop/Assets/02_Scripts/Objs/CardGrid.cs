@@ -17,6 +17,6 @@ public class CardGrid : MonoBehaviour
     public void Set(CardBase placeCard)
     {
         curPlacedCardMonth = placeCard.cardData.cardMonth; // 이제 이 그리드는 이 카드의 월에 해당하는 것만 받아올 수 있음!
-        placeCard.MoveCardToGrid(this);
+        placedCards.Add(placeCard);
     }
 }

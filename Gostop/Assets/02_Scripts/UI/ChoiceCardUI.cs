@@ -12,6 +12,9 @@ public class ChoiceCardUI : MonoBehaviour
     [HideInInspector] public CardBase rCard;
     [HideInInspector] public CardGrid grid;
 
+    public GameObject choiceDoubleNineUI;
+    public CardBase doubleNineCard;
+
     public void SetData(CardBase lCard, CardBase rCard, CardGrid grid)
     {
         this.lCard = lCard;
@@ -32,20 +35,38 @@ public class ChoiceCardUI : MonoBehaviour
         lCardImg.sprite = null;
         rCardImg.sprite = null;
 
-        GameManager.Instance.isChoicing = false;
+        MatgoManager.Instance.isChoicing = false;
         gameObject.SetActive(false);
 
     }
 
     public void ChooseLCard()
     {
-        GameManager.Instance.OnChooseCard(lCard, grid);
+        MatgoManager.Instance.OnChooseCard(lCard, grid);
         ClearData();
     }
 
     public void ChooseRCard()
     {
-        GameManager.Instance.OnChooseCard(rCard, grid);
+        MatgoManager.Instance.OnChooseCard(rCard, grid);
         ClearData();
+    }
+
+    public void ChoiceDoubleNine(CardBase doubleNine)
+    {
+        choiceDoubleNineUI.gameObject.SetActive(true);
+        doubleNineCard = doubleNine;
+    }
+
+    public void OnChoiceDoubleNine(bool useAsJunk)
+    {
+        if (useAsJunk)
+        {
+            //5doubleNineCard.cardData.cardProperty = 
+        }
+        else
+        {
+
+        }
     }
 }

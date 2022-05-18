@@ -21,7 +21,7 @@ public class UIManager : Singleton<UIManager>
         if(isUserTurn)
         {
             myScoreText.text = $"{score}Á¡";
-            myMoneyText.text = $"°¡Áø µ· : {GameManager.Instance.user.money}¿ø";
+            myMoneyText.text = $"°¡Áø µ· : {MatgoManager.Instance.user.money}¿ø";
         }
         else
         {

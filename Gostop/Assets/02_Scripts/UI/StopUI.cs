@@ -12,9 +12,9 @@ public class StopUI : MonoBehaviour
     {
         moneyText.text = string.Empty;
         gameObject.SetActive(true);
-        GameManager.Instance.isGameFinished = true;
+        MatgoManager.Instance.isGameFinished = true;
 
-        if (GameManager.Instance.isUserTurn)
+        if (MatgoManager.Instance.isUserTurn)
         {
             victoryOfDefeatText.text = "»ï¿¬»¶ ½Â¸®!";
         }
@@ -23,7 +23,7 @@ public class StopUI : MonoBehaviour
             victoryOfDefeatText.text = "»ï¿¬»¶ ÆÐ¹è..";
         }
 
-        GameManager.Instance.saveManager.Save(GameManager.Instance.user.money);
+        MatgoManager.Instance.saveManager.Save(MatgoManager.Instance.user.money);
     }
 
     public void OnStop(bool isPresident = false, bool isNagari = false)
@@ -33,37 +33,37 @@ public class StopUI : MonoBehaviour
         if (isNagari)
         {
             victoryOfDefeatText.text = "³ª°¡¸®, ¹¯°í ´õºí·Î!";
-            GameManager.Instance.sc.nagariCount++;
+            MatgoManager.Instance.sc.nagariCount++;
         }
         else if(!isPresident)
         {
-            if (GameManager.Instance.isUserTurn)
+            if (MatgoManager.Instance.isUserTurn)
             {
                 victoryOfDefeatText.text = "½Â¸®!";
-                moneyText.text = $"+ {GameManager.Instance.sc.GetCalculatedScore()}¿ø";
+                moneyText.text = $"+ {MatgoManager.Instance.sc.GetCalculatedScore()}¿ø";
             }
             else
             {
                 victoryOfDefeatText.text = "ÆÐ¹è..";
-                moneyText.text = $"- {GameManager.Instance.sc.GetCalculatedScore()}¿ø";
+                moneyText.text = $"- {MatgoManager.Instance.sc.GetCalculatedScore()}¿ø";
             }
-            GameManager.Instance.sc.SetMoney();
+            MatgoManager.Instance.sc.SetMoney();
         }
         else
         {
-            if (GameManager.Instance.isUserTurn)
+            if (MatgoManager.Instance.isUserTurn)
             {
                 victoryOfDefeatText.text = "ÃÑÅë ½Â¸®!";
-                moneyText.text = $"+ {GameManager.Instance.sc.GetPresidentMoney()}¿ø";
+                moneyText.text = $"+ {MatgoManager.Instance.sc.GetPresidentMoney()}¿ø";
             }
             else
             {
                 victoryOfDefeatText.text = "ÃÑÅë ÆÐ¹è..";
-                moneyText.text = $"- {GameManager.Instance.sc.GetPresidentMoney()}¿ø";
+                moneyText.text = $"- {MatgoManager.Instance.sc.GetPresidentMoney()}¿ø";
             }
-            GameManager.Instance.sc.SetMoney();
+            MatgoManager.Instance.sc.SetMoney(10);
         }
-        GameManager.Instance.saveManager.Save(GameManager.Instance.user.money);
+        MatgoManager.Instance.saveManager.Save(MatgoManager.Instance.user.money);
     }
 
 
@@ -73,7 +73,7 @@ public class StopUI : MonoBehaviour
     {
         reStart.onClick.AddListener(() =>
         {
-            GameManager.Instance.ReLoad();
+            MatgoManager.Instance.ReLoad();
         });
     }
 }

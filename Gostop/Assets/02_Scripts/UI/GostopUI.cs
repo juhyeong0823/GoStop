@@ -13,10 +13,10 @@ public class GostopUI : MonoBehaviour
     
     public void AccomplishedCondition()
     {
-        if (GameManager.Instance.isUserTurn)
+        if (MatgoManager.Instance.isUserTurn)
         {
-            goCountText.text = $"{GameManager.Instance.targetUserData.scoreData.goCount + 1}°í";
-            scoreText.text = $"½ºÅé ½Ã{GameManager.Instance.sc.GetCalculatedScore()}¿ø È¹µæ";
+            goCountText.text = $"{MatgoManager.Instance.targetUser.scoreData.goCount + 1}°í";
+            scoreText.text = $"½ºÅé ½Ã{MatgoManager.Instance.sc.GetCalculatedScore()}¿ø È¹µæ";
             this.gameObject.SetActive(true);
         }
         else
@@ -27,9 +27,9 @@ public class GostopUI : MonoBehaviour
 
     public void Go()
     {
-        GameManager.Instance.targetUserData.scoreData.goCount++;
+        MatgoManager.Instance.targetUser.scoreData.goCount++;
         this.gameObject.SetActive(false);
-        GameManager.Instance.SetTurn();
+        MatgoManager.Instance.SetTurn();
     }
 
     public void Stop(bool isNagari = false)

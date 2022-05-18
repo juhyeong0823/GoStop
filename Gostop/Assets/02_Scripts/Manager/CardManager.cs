@@ -13,10 +13,10 @@ public class CardManager : Singleton<CardManager>
     public CardBase cardPrefab;
     public CardBase bombPaybackCardObj;
 
-    GameManager gm;
+    MatgoManager gm;
     private void Awake()
     {
-        gm = GameManager.Instance;
+        gm = MatgoManager.Instance;
     }
 
 
@@ -29,10 +29,10 @@ public class CardManager : Singleton<CardManager>
         Transform destination = null;
         eProperty e = card.cardData.cardProperty;
 
-        if ((e & eProperty.Animal) != 0) destination = gm.targetUserData.animalsTrm;
-        else if ((e & eProperty.Gwang) != 0) destination = gm.targetUserData.gwangTrm; 
-        else if ((e & eProperty.Band) != 0) destination = gm.targetUserData.bandTrm; 
-        else  destination = gm.targetUserData.junkTrm;
+        if ((e & eProperty.Animal) != 0) destination = gm.targetUser.animalsTrm;
+        else if ((e & eProperty.Gwang) != 0) destination = gm.targetUser.gwangTrm; 
+        else if ((e & eProperty.Band) != 0) destination = gm.targetUser.bandTrm; 
+        else  destination = gm.targetUser.junkTrm;
 
         card.transform.DOMove(destination.transform.position, 0.15f, false).OnComplete(() => card.transform.parent = destination.transform);
     }
@@ -42,7 +42,7 @@ public class CardManager : Singleton<CardManager>
         for(int i = 0; i< paybackCardCount; i++)
         {
             CardBase paybackCard = Instantiate(bombPaybackCardObj, parent);
-            GameManager.Instance.targetUserData.utilizeCards.Add(paybackCard);
+            MatgoManager.Instance.targetUser.utilizeCards.Add(paybackCard);
         }
     }
 
@@ -89,7 +89,8 @@ public class CardManager : Singleton<CardManager>
         }
 
         grid.Set(card);
-        card.gameObject.SetActive(true);
+        MatgoManager.Instance.MakeCardObj(grid, card);
+        
     }
 
     public void SetPlayersUtilizeCard(UserData user, UserData ai)
@@ -111,7 +112,7 @@ public class CardManager : Singleton<CardManager>
     public List<CardBase> GetSameMonthCards(CardBase card)
     {
         List<CardBase> list = new List<CardBase>();
-        foreach(var item in GameManager.Instance.targetUserData.utilizeCards)
+        foreach(var item in MatgoManager.Instance.targetUser.utilizeCards)
         {
             try
             {

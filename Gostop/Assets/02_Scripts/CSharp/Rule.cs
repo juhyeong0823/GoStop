@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Rule
 {
+    MatgoManager matgoManager;
+
     public bool CanGo(int score, ScoreData scoreData)
     {
         if (score >= 7 && scoreData.bFirstGo)
@@ -25,25 +27,29 @@ public class Rule
 
     public void CheckPresident() // 내가 가진 패 중, 같은 월 카드가 몇개인지 -> 폭탄 흔들기 체크용임
     {
-        GameManager.Instance.SetTargetUserData();
-        GameManager.Instance.isUserTurn = !GameManager.Instance.isUserTurn;
+        matgoManager = MatgoManager.Instance;
 
-        foreach (var card in GameManager.Instance.targetUserData.utilizeCards)
+        for (int i = 0; i< 2; i++)
         {
-            if (CardManager.Instance.GetSameMonthCards(card).Count == 4)
+            MatgoManager.Instance.SetTargetUserdata();
+            foreach (var card in MatgoManager.Instance.targetUser.utilizeCards)
             {
-                UIManager.Instance.gostopUI.stopUI.OnStop(true, false);
+                if (CardManager.Instance.GetSameMonthCards(card).Count == 4)
+                {
+                    UIManager.Instance.gostopUI.stopUI.OnStop(true, false);
+                }
             }
+            MatgoManager.Instance.isUserTurn = !MatgoManager.Instance.isUserTurn;
         }
 
-        GameManager.Instance.SetTargetUserData();
-        GameManager.Instance.isUserTurn = !GameManager.Instance.isUserTurn;
-
-        foreach (var card in GameManager.Instance.targetUserData.utilizeCards)
+        foreach (var grid in MatgoManager.Instance.cardGrids)
         {
-            if (CardManager.Instance.GetSameMonthCards(card).Count == 4)
+            foreach(var card in grid.placedCards)
             {
-                UIManager.Instance.gostopUI.stopUI.OnStop(true, false);
+                if (CardManager.Instance.GetSameMonthCards(card).Count == 4)
+                {
+                    UIManager.Instance.gostopUI.stopUI.OnStop(true, true);
+                }
             }
         }
     }
@@ -56,10 +62,10 @@ public class Rule
             if (sameWithItemMonth > 3)
             {
                 //첫 턴인지 아닌지 체크해서 처음이면 총통
-                if (GameManager.Instance.isFirstChecking)
+                if (MatgoManager.Instance.isFirstChecking)
                 {
                     // 총통, 승리 처리 후 게임 데이터 등에 static으로 박아놔서 Double! 박아두기
-                    GameManager.Instance.isFirstChecking = false;
+                    MatgoManager.Instance.isFirstChecking = false;
                 }
                 else
                 {
@@ -69,7 +75,7 @@ public class Rule
             else if (sameWithItemMonth > 2)
             {
                 // 폭탄 or 흔들기인데 이제 
-                if (CardFinder.GetSameMonthCardsGrid(GameManager.Instance.cardGrids, card) != null)
+                if (CardFinder.GetSameMonthCardsGrid(MatgoManager.Instance.cardGrids, card) != null)
                 {
                     // 여기는 폭탄
                 }
@@ -82,7 +88,7 @@ public class Rule
             {
                 // 카드 위 커서, 살아 있는 패 커서로
             }
-            else if (CardFinder.GetSameMonthCardsGrid(GameManager.Instance.cardGrids, card) != null)
+            else if (CardFinder.GetSameMonthCardsGrid(MatgoManager.Instance.cardGrids, card) != null)
             {
                 // 죽은 패
             }
@@ -95,7 +101,7 @@ public class Rule
 
     public bool IsTakenMonthCard(CardBase card) // 죽은 패인지
     {
-        foreach (int month in GameManager.Instance.takenMonthList)
+        foreach (int month in MatgoManager.Instance.takenMonthList)
         {
             if (month == card.cardData.cardMonth) return true;
         }
@@ -104,19 +110,19 @@ public class Rule
 
     public void Shake()
     {
-        GameManager.Instance.targetUserData.scoreData.shakedCount++;
+        MatgoManager.Instance.targetUser.scoreData.shakedCount++;
     }
 
     public void Bomb(int paybackCardCount)
     {
-        GameManager.Instance.targetUserData.scoreData.shakedCount++;
-        CardManager.Instance.OnDroppedBomb(paybackCardCount, GameManager.Instance.targetUserData.utilizeCardsTrm);
+        MatgoManager.Instance.targetUser.scoreData.shakedCount++;
+        CardManager.Instance.OnDroppedBomb(paybackCardCount, MatgoManager.Instance.targetUser.utilizeCardsTrm);
     }
 
     public void Paulk()
     {
-        GameManager.Instance.targetUserData.scoreData.paulkCount++;
-        if (GameManager.Instance.sc.CheckPaulkCount(GameManager.Instance.targetUserData.scoreData))
+        MatgoManager.Instance.targetUser.scoreData.paulkCount++;
+        if (MatgoManager.Instance.sc.CheckPaulkCount(MatgoManager.Instance.targetUser.scoreData))
         {
             UIManager.Instance.gostopUI.stopUI.PaulkWin();
         }
@@ -126,7 +132,7 @@ public class Rule
     {
         bool canSweep = true;
 
-        foreach(var item in GameManager.Instance.cardGrids)
+        foreach(var item in MatgoManager.Instance.cardGrids)
         {
             if(item.placedCards.Count != 0)
             {
@@ -137,13 +143,14 @@ public class Rule
         if(canSweep)
         {
             Debug.Log("쓸!");
-            GameManager.Instance.TakeOtherPlayerCard();
+
+            MatgoManager.Instance.TakeOtherPlayerCard();
         }
     }
 
     public void Kiss()
     {
         Debug.Log("쪽");
-        GameManager.Instance.TakeOtherPlayerCard();
+        MatgoManager.Instance.TakeOtherPlayerCard();
     }
 }

@@ -10,7 +10,7 @@ public class ShakeUI : MonoBehaviour
 
     public void SetData(CardBase clickedCard, CardGrid grid)
     {
-        GameManager.Instance.isShaking = true;
+        MatgoManager.Instance.isShaking = true;
         gameObject.SetActive(true);
 
         this.clickedCard = clickedCard;
@@ -23,18 +23,18 @@ public class ShakeUI : MonoBehaviour
         clickedCard = null;
 
         gameObject.SetActive(false);
-        GameManager.Instance.isShaking = false;
+        MatgoManager.Instance.isShaking = false;
     }
 
     public void Shake()
     {
-        GameManager.Instance.OnShaked(clickedCard, grid);
+        MatgoManager.Instance.OnShaked(clickedCard, grid);
         ClearData();
     }
 
     public void NotShake()
     {
-        GameManager.Instance.OnShaked(clickedCard, grid, false);
+        MatgoManager.Instance.OnShaked(clickedCard, grid, false);
         ClearData();
     }
 

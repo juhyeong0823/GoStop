@@ -17,16 +17,20 @@ public class SaveData
 
 public class SaveManager
 {
+    
     public void Save(int myMoney)
     {
         BinaryFormatter bf = new BinaryFormatter();
 
         FileStream fs = null;
-        //if(!File.Exists(Application.persistentDataPath + "/saveData.sav"))
-        //{
-        //     fs = File.Create(Application.persistentDataPath + "/saveData.sav");
-        //}
-        fs = File.Open(Application.persistentDataPath + "/saveData.txt", FileMode.OpenOrCreate);
+        if (!File.Exists(Application.persistentDataPath + "/saveData.txt"))
+        {
+            fs = File.Create(Application.persistentDataPath + "/saveData.txt");
+        }
+        else
+        {
+            fs = File.Open(Application.persistentDataPath + "/saveData.txt", FileMode.OpenOrCreate);
+        }
 
         SaveData sd = new SaveData(myMoney);
         bf.Serialize(fs, sd);
@@ -43,6 +47,11 @@ public class SaveManager
             FileStream fs = File.Open(Application.persistentDataPath + "/saveData.txt", FileMode.OpenOrCreate);
             data = (SaveData)bf.Deserialize(fs);
             fs.Close();
+        }
+
+        if(data == null)
+        {
+            data = new SaveData(0);
         }
         return data;
     }

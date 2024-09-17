@@ -21,7 +21,7 @@ public class UIManager : Singleton<UIManager>
         if(isUserTurn)
         {
             myScoreText.text = $"{score}점";
-            myMoneyText.text = $"가진 돈 : {GameManager.Instance.user.money}원";
+            myMoneyText.text = $"가진 돈 : {MatgoManager.Instance.user.money}원";
         }
         else
         {
@@ -29,5 +29,7 @@ public class UIManager : Singleton<UIManager>
             //aiMoneyText.text = "이 친구에겐 돈이 없어. 넌 거지의 돈을 뺐는거라고..";
         }
     }
+
+
 
 }

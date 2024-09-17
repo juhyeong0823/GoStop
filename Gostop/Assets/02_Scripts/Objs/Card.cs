@@ -14,8 +14,12 @@ public class Card : CardBase
 
     public override void OnPointerDown(PointerEventData eventData)
     {
-        if (!GameManager.Instance.isUserTurn || GameManager.Instance.isChoicing || GameManager.Instance.isShaking) return;
-        img.raycastTarget = false; ;
-        GameManager.Instance.PutCard(this);
+        if (MatgoManager.Instance.isGameProcessing)
+        {
+            Debug.Log("돌아가요~");
+            return;
+        }
+
+        MatgoManager.Instance.PutCard(this);
     }
 }
